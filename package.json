@@ -1,0 +1,33 @@
+{
+  "name": "delayed-payment-wallet",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "compile": "truffle compile",
+    "test": "truffle test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:sol": "solium -d .",
+    "lint:sol:fix": "solium -d . --fix",
+    "lint:all": "yarn run lint && yarn run lint:sol",
+    "lint:all:fix": "yarn run lint:fix && yarn run lint:sol:fix"
+  },
+  "dependencies": {
+    "sc-library": "github:MyWishPlatform/sc-library#0.4.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^2.0.2",
+    "eslint": "^5.0.1",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.8.0",
+    "eslint-plugin-standard": "^3.1.0",
+    "ganache-core": "^2.1.3",
+    "solium": "^1.1.7",
+    "truffle": "^4.1.13"
+  }
+}
