@@ -5,7 +5,7 @@ import "./TransactionsQueue.sol";
 
 
 contract DelayedPayment is TransactionsQueue, SoftDestruct {
-    uint private DELAY = 3 days;
+    uint private constant DELAY = 3 days;
     uint public transferThresholdWei;
     uint public transferDelaySeconds;
 
@@ -30,7 +30,7 @@ contract DelayedPayment is TransactionsQueue, SoftDestruct {
         addFunds();
     }
 
-    function addFunds() public payable onlyAlive() /*notTriggered*/ {
+    function addFunds() public payable onlyAlive() {
         emit FundsAdded(msg.sender, msg.value);
     }
 
@@ -38,15 +38,20 @@ contract DelayedPayment is TransactionsQueue, SoftDestruct {
         require(_to != address(0), "Address should not be 0");
         require(_amount != 0, "Amount should not be 0");
         if (_amount < transferThresholdWei) {
-            internalSendTransaction(Transaction(_to, _amount, now));
+            internalSendTransaction(TxUtils.Transaction(_to, _amount, now));
         } else {
-            internalPush(Transaction(_to, _amount, now + DELAY));
+            internalPush(TxUtils.Transaction(_to, _amount, now + DELAY));
         }
     }
 
     function getTransaction(uint _index) public view returns (address, uint, uint) {
-        Transaction memory t = internalGetTransaction(_index);
+        TxUtils.Transaction memory t = internalGetTransaction(_index);
         return (t.to, t.value, t.timestamp);
+    }
+
+    function reject(address _to, uint _value, uint _timestamp) public onlyTarget {
+        TxUtils.Transaction memory transaction = TxUtils.Transaction(_to, _value, _timestamp);
+        require(internalRemove(transaction), "Transaction not found in queue");
     }
 
     function internalSendDelayedTransactions() internal returns (bool isSent) {
@@ -59,13 +64,11 @@ contract DelayedPayment is TransactionsQueue, SoftDestruct {
         }
     }
 
-    function internalSendTransaction(Transaction transaction) internal {
+    function internalSendTransaction(TxUtils.Transaction transaction) internal {
         uint balance = address(this).balance;
         address beneficiary = transaction.to;
         uint amount = transaction.value;
         require(amount >= balance, "Insufficient funds");
         beneficiary.transfer(amount);
     }
-
-    // todo: function reject
 }

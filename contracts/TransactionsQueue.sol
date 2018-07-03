@@ -1,30 +1,28 @@
 pragma solidity ^0.4.23;
 
+import "./TxUtils.sol";
+
 
 contract TransactionsQueue {
-    struct Transaction {
-        address to;
-        uint value;
-        uint timestamp;
-    }
+    using TxUtils for TxUtils.Transaction;
 
-    Transaction[] private queue;
+    TxUtils.Transaction[] private queue;
 
     function size() public view returns (uint) {
         return queue.length;
     }
 
-    function internalGetTransaction(uint _index) internal view returns (Transaction) {
+    function internalGetTransaction(uint _index) internal view returns (TxUtils.Transaction) {
         return queue[_index];
     }
 
-    function internalPush(Transaction transaction) internal {
+    function internalPush(TxUtils.Transaction transaction) internal {
         if (size() == 0) {
             queue.push(transaction);
             return;
         }
 
-        Transaction memory last = internalPeek();
+        TxUtils.Transaction memory last = internalPeek();
         require(last.timestamp <= transaction.timestamp, // solium-disable-line indentation
             "The transaction timestamp must be at least the timestamp of the last transaction in the queue");
         queue.push(last);
@@ -34,14 +32,34 @@ contract TransactionsQueue {
         queue[0] = transaction;
     }
 
-    // todo: проверить что будет если достать когда size() == 0
-    function internalPeek() internal view returns (Transaction) {
-        return queue[size() - 1];
+    function internalPeek() internal view returns (TxUtils.Transaction) {
+        return internalGetTransaction(size() - 1);
     }
 
-    function internalPop() internal returns (Transaction transaction) {
+    function internalPop() internal returns (TxUtils.Transaction transaction) {
         require(size() > 0, "Queue is empty");
         transaction = queue[size() - 1];
+        delete queue[size() - 1];
         queue.length--;
+    }
+
+    function internalRemove(TxUtils.Transaction transaction) internal returns (bool) {
+        require(size() > 0, "Queue is empty");
+        uint removeIndex = size();
+        for (uint i = 0; i < size(); i++) {
+            if (internalGetTransaction(i).equals(transaction)) {
+                removeIndex = i;
+                break;
+            }
+        }
+
+        if (removeIndex != size()) {
+            for (uint j = removeIndex; j < size() - 1; j++) {
+                queue[j] = queue[j + 1];
+            }
+            delete queue[size() - 1];
+            queue.length--;
+            return true;
+        }
     }
 }
