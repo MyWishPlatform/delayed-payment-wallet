@@ -1,13 +1,16 @@
 pragma solidity ^0.4.23;
 
 import "sc-library/contracts/SoftDestruct.sol";
-import "./TransactionsQueue.sol";
+import "./QueueUtils.sol";
 
 
-contract DelayedPayment is TransactionsQueue, SoftDestruct {
-    uint private constant DELAY = 3 days;
+contract DelayedPayment is SoftDestruct {
+    using QueueUtils for QueueUtils.Queue;
+
+    uint internal constant DELAY = 3 days;
     uint public transferThresholdWei;
     uint public transferDelaySeconds;
+    QueueUtils.Queue internal queue;
 
     // Occurs when contract was killed.
     event Killed(bool byUser);
@@ -40,26 +43,26 @@ contract DelayedPayment is TransactionsQueue, SoftDestruct {
         if (_amount < transferThresholdWei) {
             internalSendTransaction(TxUtils.Transaction(_to, _amount, now));
         } else {
-            internalPush(TxUtils.Transaction(_to, _amount, now + DELAY));
+            queue.push(TxUtils.Transaction(_to, _amount, now + DELAY));
         }
     }
 
     function getTransaction(uint _index) public view returns (address, uint, uint) {
-        TxUtils.Transaction memory t = internalGetTransaction(_index);
+        TxUtils.Transaction memory t = queue.getTransaction(_index);
         return (t.to, t.value, t.timestamp);
     }
 
     function reject(address _to, uint _value, uint _timestamp) public onlyTarget {
         TxUtils.Transaction memory transaction = TxUtils.Transaction(_to, _value, _timestamp);
-        require(internalRemove(transaction), "Transaction not found in queue");
+        require(queue.remove(transaction), "Transaction not found in queue");
     }
 
-    function internalSendDelayedTransactions() internal returns (bool isSent) {
-        for (uint i = 0; i < size(); i++) {
-            if (internalPeek().timestamp > now) {
+    function sendDelayedTransactions() public returns (bool isSent) {
+        for (uint i = 0; i < queue.size(); i++) {
+            if (queue.peek().timestamp > now) {
                 break;
             }
-            internalSendTransaction(internalPop());
+            internalSendTransaction(queue.pop());
             isSent = true;
         }
     }
