@@ -7,7 +7,6 @@ import "./QueueUtils.sol";
 contract DelayedPayment is SoftDestruct {
     using QueueUtils for QueueUtils.Queue;
 
-    uint internal constant DELAY = 3 days;
     uint public transferThresholdWei;
     uint public transferDelaySeconds;
     QueueUtils.Queue internal queue;
@@ -43,7 +42,7 @@ contract DelayedPayment is SoftDestruct {
         if (_amount < transferThresholdWei) {
             internalSendTransaction(TxUtils.Transaction(_to, _amount, now));
         } else {
-            queue.push(TxUtils.Transaction(_to, _amount, now + DELAY));
+            queue.push(TxUtils.Transaction(_to, _amount, now + transferDelaySeconds));
         }
     }
 
