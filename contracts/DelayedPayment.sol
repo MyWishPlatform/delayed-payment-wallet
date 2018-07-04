@@ -108,6 +108,13 @@ contract DelayedPayment is SoftDestruct {
     }
 
     /**
+     * @return size Number of transactions in the queue.
+     */
+    function queueSize() public view returns (uint size) {
+        return queue.size();
+    }
+
+    /**
      * @dev Immediate transaction sending.
      *
      * @param transaction The transaction to be sent.
