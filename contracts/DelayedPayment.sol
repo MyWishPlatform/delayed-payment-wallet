@@ -116,7 +116,7 @@ contract DelayedPayment is SoftDestruct {
         uint balance = address(this).balance;
         address beneficiary = transaction.to;
         uint amount = transaction.value;
-        require(amount >= balance, "Insufficient funds");
+        require(amount <= balance, "Insufficient funds");
         beneficiary.transfer(amount);
     }
 }
