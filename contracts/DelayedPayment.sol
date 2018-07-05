@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
 import "sc-library/contracts/SoftDestruct.sol";
-import "./QueueUtils.sol";
+import "./utils/QueueUtils.sol";
 
 
 contract DelayedPayment is SoftDestruct {
