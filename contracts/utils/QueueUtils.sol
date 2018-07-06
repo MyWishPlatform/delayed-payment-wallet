@@ -82,10 +82,9 @@ library QueueUtils {
         require(size(_self) > 0, "Queue is empty");
 
         uint iterator = _self.tail;
-        do {
+        while (iterator != 0) {
             Node memory node = _self.list[iterator];
             if (node.data.equals(_tx)) {
-
                 if (node.prev != 0 && node.next != 0) {
                     _self.list[node.prev].next = _self.list[node.next].data.timestamp;
                     _self.list[node.next].prev = _self.list[node.next].data.timestamp;
@@ -102,7 +101,7 @@ library QueueUtils {
                 return true;
             }
             iterator = _self.list[iterator].next;
-        } while (iterator != 0);
+        }
 
         return false;
     }

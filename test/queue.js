@@ -199,4 +199,43 @@ contract('Queue', function (accounts) {
         peek[2].should.be.bignumber.equal(now + MINUTE);
         (await queue.size()).should.be.bignumber.equal(2);
     });
+
+    it('#15 remove head', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.push(RECIPIENT_1, 1000, now + MINUTE);
+        await queue.push(RECIPIENT_1, 1000, now + 2 * MINUTE);
+        await queue.remove(RECIPIENT_1, 1000, now);
+        const peek = await queue.peek();
+        peek[0].should.be.equal(RECIPIENT_1);
+        peek[1].should.be.bignumber.equal(1000);
+        peek[2].should.be.bignumber.equal(now + MINUTE);
+        (await queue.size()).should.be.bignumber.equal(2);
+    });
+
+    it('#16 remove tail', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.push(RECIPIENT_1, 1000, now + MINUTE);
+        await queue.push(RECIPIENT_1, 1000, now + 2 * MINUTE);
+        await queue.remove(RECIPIENT_1, 1000, now + 2 * MINUTE);
+        const peek = await queue.peek();
+        peek[0].should.be.equal(RECIPIENT_1);
+        peek[1].should.be.bignumber.equal(1000);
+        peek[2].should.be.bignumber.equal(now);
+        (await queue.size()).should.be.bignumber.equal(2);
+    });
+
+    it('#17 remove middle', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.push(RECIPIENT_1, 1000, now + MINUTE);
+        await queue.push(RECIPIENT_1, 1000, now + 2 * MINUTE);
+        await queue.remove(RECIPIENT_1, 1000, now + MINUTE);
+        const peek = await queue.peek();
+        peek[0].should.be.equal(RECIPIENT_1);
+        peek[1].should.be.bignumber.equal(1000);
+        peek[2].should.be.bignumber.equal(now);
+        (await queue.size()).should.be.bignumber.equal(2);
+    });
 });
