@@ -189,7 +189,6 @@ contract('Queue', function (accounts) {
 
     it('#14 push & push & remove & push', async () => {
         const queue = await Queue.new();
-        // [2] [1]
         await queue.push(RECIPIENT_1, 1000, now);
         await queue.push(RECIPIENT_1, 1000, now + MINUTE);
         await queue.remove(RECIPIENT_1, 1000, now);

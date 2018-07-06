@@ -91,8 +91,10 @@ library QueueUtils {
                     _self.list[node.next].prev = _self.list[node.next].data.timestamp;
                 } else if (node.prev != 0) {
                     _self.list[node.prev].next = 0;
+                    _self.head = node.prev != 0 ? node.prev : _self.tail;
                 } else if (node.next != 0) {
                     _self.list[node.next].prev = 0;
+                    _self.head = node.next != 0 ? node.next : _self.head;
                 }
 
                 delete _self.list[iterator];
