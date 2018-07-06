@@ -81,17 +81,26 @@ library QueueUtils {
     function remove(Queue storage _self, TxUtils.Transaction _tx) internal returns (bool) {
         require(size(_self) > 0, "Queue is empty");
 
-        for (uint i = _self.tail; i != _self.head; i = _self.list[i].next) {
-            Node memory node = _self.list[i];
+        uint iterator = _self.tail;
+        do {
+            Node memory node = _self.list[iterator];
             if (node.data.equals(_tx)) {
-                Node storage prevNode = _self.list[node.prev];
-                Node storage nextNode = _self.list[node.next];
-                prevNode.next = nextNode.data.timestamp;
-                nextNode.prev = prevNode.data.timestamp;
-                delete _self.list[i];
+
+                if (node.prev != 0 && node.next != 0) {
+                    _self.list[node.prev].next = _self.list[node.next].data.timestamp;
+                    _self.list[node.next].prev = _self.list[node.next].data.timestamp;
+                } else if (node.prev != 0) {
+                    _self.list[node.prev].next = 0;
+                } else if (node.next != 0) {
+                    _self.list[node.next].prev = 0;
+                }
+
+                delete _self.list[iterator];
+                _self.length--;
                 return true;
             }
-        }
+            iterator = _self.list[iterator].next;
+        } while (iterator != 0);
 
         return false;
     }

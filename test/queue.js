@@ -133,4 +133,71 @@ contract('Queue', function (accounts) {
         await queue.isEmpty().should.eventually.be.true;
         (await queue.size()).should.be.bignumber.equal(0);
     });
+
+    it('#10 push & pop & push', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.pop();
+        await queue.push(RECIPIENT_1, 1000, now + MINUTE);
+        const peek = await queue.peek();
+        peek[0].should.be.equal(RECIPIENT_1);
+        peek[1].should.be.bignumber.equal(1000);
+        peek[2].should.be.bignumber.equal(now + MINUTE);
+        await queue.isEmpty().should.eventually.be.false;
+        (await queue.size()).should.be.bignumber.equal(1);
+    });
+
+    it('#11 push & push & pop & push', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.push(RECIPIENT_1, 1000, now + MINUTE);
+        await queue.pop();
+        await queue.push(RECIPIENT_1, 1000, now + 2 * MINUTE);
+        const peek = await queue.peek();
+        peek[0].should.be.equal(RECIPIENT_1);
+        peek[1].should.be.bignumber.equal(1000);
+        peek[2].should.be.bignumber.equal(now + MINUTE);
+        await queue.isEmpty().should.eventually.be.false;
+        (await queue.size()).should.be.bignumber.equal(2);
+    });
+
+    it('#12 push & remove & push', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.remove(RECIPIENT_1, 1000, now);
+        await queue.isEmpty().should.eventually.be.true;
+
+        await queue.push(RECIPIENT_1, 1000, now);
+        const peek = await queue.peek();
+        peek[0].should.be.equal(RECIPIENT_1);
+        peek[1].should.be.bignumber.equal(1000);
+        peek[2].should.be.bignumber.equal(now);
+        (await queue.size()).should.be.bignumber.equal(1);
+    });
+
+    it('#13 push & push & remove', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.push(RECIPIENT_1, 1000, now + MINUTE);
+        await queue.remove(RECIPIENT_1, 1000, now);
+        const peek = await queue.peek();
+        peek[0].should.be.equal(RECIPIENT_1);
+        peek[1].should.be.bignumber.equal(1000);
+        peek[2].should.be.bignumber.equal(now + MINUTE);
+        (await queue.size()).should.be.bignumber.equal(1);
+    });
+
+    it('#14 push & push & remove & push', async () => {
+        const queue = await Queue.new();
+        // [2] [1]
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.push(RECIPIENT_1, 1000, now + MINUTE);
+        await queue.remove(RECIPIENT_1, 1000, now);
+        await queue.push(RECIPIENT_1, 1000, now + 2 * MINUTE);
+        const peek = await queue.peek();
+        peek[0].should.be.equal(RECIPIENT_1);
+        peek[1].should.be.bignumber.equal(1000);
+        peek[2].should.be.bignumber.equal(now + MINUTE);
+        (await queue.size()).should.be.bignumber.equal(2);
+    });
 });
