@@ -60,20 +60,22 @@ library QueueUtils {
         return isEmpty(_self) ? TxUtils.Transaction(0, 0, 0) : _self.list[_self.head].data;
     }
 
-    function pop(Queue storage _self) internal returns (TxUtils.Transaction memory result) {
+    function pop(Queue storage _self) internal returns (TxUtils.Transaction) {
         if (isEmpty(_self)) {
             return TxUtils.Transaction(0, 0, 0);
         }
-
-        result = _self.list[_self.head].data;
 
         if (size(_self) == 1) {
             _self.tail = 0;
         }
 
-//        delete _self.list[_self.head];
-        _self.head = _self.list[_self.head].prev;
+        Node memory current = _self.list[_self.head];
+        uint newHead = current.prev;
+        delete _self.list[_self.head];
+        _self.head = newHead;
         _self.length--;
+
+        return current.data;
     }
 
     function remove(Queue storage _self, TxUtils.Transaction _tx) internal returns (bool) {
@@ -89,8 +91,6 @@ library QueueUtils {
                 delete _self.list[i];
                 return true;
             }
-
-            node = _self.list[node.next];
         }
 
         return false;
