@@ -47,12 +47,34 @@ contract('DelayedPayment', function (accounts) {
     it('#3 send less than threshold', async () => {
         const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(1, 'ether') });
+        const balanceBefore = await getBalance(RECIPIENT_1);
         await contract.sendFunds(RECIPIENT_1, web3.toWei(0.5, 'ether'), { from: TARGET });
+        const balanceAfter = await getBalance(RECIPIENT_1);
+        balanceAfter.sub(balanceBefore).should.be.bignumber.equal(web3.toWei(0.5, 'ether'));
     });
 
-    it('#4', async () => {
-        // const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
-        // await contract.sendTransaction({ value: web3.toWei(1, 'ether') });
-        // await contrac
+    it('#4 send more than threshold', async () => {
+        const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
+        await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
+        const balanceBefore = await getBalance(RECIPIENT_1);
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        const balanceAfter = await getBalance(RECIPIENT_1);
+        balanceAfter.should.be.bignumber.equal(balanceBefore);
+    //    (await contract.queueSize()).should.be.bignumber.equal(1);
     });
+
+
+    /***
+    it('#3 execute more than threshold', async () => {
+        const contract = await DelayedPaymentWallet.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
+        await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
+        const balanceBefore = await getBalance(RECIPIENT_1);
+        await contract.execute(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
+        const balanceAfter = await getBalance(RECIPIENT_1);
+        balanceAfter.should.be.bignumber.equal(balanceBefore);
+        (await contract.queueSize()).should.be.bignumber.equal(1);
+    });
+    ***/
+
+
 });

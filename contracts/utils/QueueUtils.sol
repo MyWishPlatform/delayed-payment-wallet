@@ -28,7 +28,7 @@ library QueueUtils {
     }
 
     function getTransaction(Queue storage _self, uint _index) internal view returns (TxUtils.Transaction) {
-        for (uint i = _self.tail; i != _self.head; i = _self.list[i].next) {
+        for (uint i = _self.tail; i >= _self.head; i = _self.list[i].prev) {
             Node memory node = _self.list[i];
             if (i == _index) {
                 return node.data;

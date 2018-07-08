@@ -238,4 +238,26 @@ contract('Queue', function (accounts) {
         peek[2].should.be.bignumber.equal(now);
         (await queue.size()).should.be.bignumber.equal(2);
     });
+
+    it('#18 get transaction', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        const tx = await queue.getTransaction(now);
+        tx[0].should.be.equal(RECIPIENT_1);
+        tx[1].should.be.bignumber.equal(1000);
+        tx[2].should.be.bignumber.equal(now);
+        (await queue.size()).should.be.bignumber.equal(1);
+    });
+
+
+    it('#18 try to get removed transaction', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.remove(RECIPIENT_1, 1000, now);
+        const emptyTx = await queue.getTransaction(now);
+        emptyTx[0].should.not.be.equal(RECIPIENT_1);
+        emptyTx[1].should.be.bignumber.zero;
+        emptyTx[2].should.be.bignumber.zero;
+
+    });
 });
