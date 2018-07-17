@@ -66,7 +66,6 @@ contract('DelayedPayment', function (accounts) {
         (await contract.queueSize()).should.be.bignumber.equal(1);
     });
 
-    /***
     it('#5 delayed tx can be found in queue', async () => {
         const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
@@ -75,26 +74,37 @@ contract('DelayedPayment', function (accounts) {
         const tx = await contract.getTransaction(0);
         tx[0].should.be.equals(RECIPIENT_1);
         tx[1].should.be.bignumber.equals(web3.toWei(1.5, 'ether'));
-        Number(tx[2]).should.be.within(now + 2 * DAY - SECOND, now + 2 * DAY + SECOND);
+        tx[2].should.not.be.bignumber.zero;
     });
 
-    it('#6 delayed tx sended', async () => {
+    it('#7 delayed tx sended', async () => {
         const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
         const balanceBefore = await getBalance(RECIPIENT_1);
         await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
         (await contract.queueSize()).should.be.bignumber.equal(1);
         await increaseTime(3 * DAY);
-        (await contract.sendDelayedTransactions()).should.be.fulfilled;
+        await contract.sendDelayedTransactions().should.be.fulfilled;
+        (await contract.queueSize()).should.be.bignumber.zero;
     });
 
-    it('#7 reject delayed transaction', async () => {
+    it('#8 reject delayed transaction', async () => {
         const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
         await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
         (await contract.queueSize()).should.be.bignumber.equal(1);
-        const tx = await contract.getTransaction(now + 2 * DAY);
-        (await contract.reject(tx[0], tx[1], tx[2])).should.be.fulfilled;
+        const tx = await contract.getTransaction(0);
+        await contract.reject(tx[0], tx[1], tx[2], {from: TARGET})
+        .should.be.fulfilled;
     });
-    ***/
+
+    it('#9 try to reject delayed tx not from target', async () => {
+        const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
+        await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        (await contract.queueSize()).should.be.bignumber.equal(1);
+        const tx = await contract.getTransaction(0);
+        await contract.reject(tx[0], tx[1], tx[2]).should.be.rejected;
+    });
+
 });

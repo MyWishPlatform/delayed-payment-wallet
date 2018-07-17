@@ -264,16 +264,14 @@ contract('Queue', function (accounts) {
         tx1[2].should.be.bignumber.lessThan(tx2[2]);
     });
 
-    /***
     it('#18 try to get removed transaction', async () => {
         const queue = await Queue.new();
         await queue.push(RECIPIENT_1, 1000, now);
         await queue.remove(RECIPIENT_1, 1000, now);
         (await queue.size()).should.be.bignumber.zero;
-        const emptyTx = await queue.getTransaction(now);
+        const emptyTx = await queue.getTransaction(0);
         emptyTx[0].should.not.be.equal(RECIPIENT_1);
         emptyTx[1].should.be.bignumber.zero;
         emptyTx[2].should.be.bignumber.zero;
     });
-    ***/
 });
