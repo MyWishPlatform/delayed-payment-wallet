@@ -28,13 +28,13 @@ library QueueUtils {
     }
 
     function getTransaction(Queue storage _self, uint _index) internal view returns (TxUtils.Transaction) {
-        for (uint i = _self.tail; i >= _self.head; i = _self.list[i].prev) {
+        uint count = 0;
+        for (uint i = _self.head; i <= _self.tail; i = _self.list[i].prev) {
             Node memory node = _self.list[i];
-            if (i == _index) {
+            if (count == _index) {
                 return node.data;
             }
-
-            node = _self.list[node.next];
+            count++;
         }
     }
 

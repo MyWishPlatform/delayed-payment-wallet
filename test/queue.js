@@ -19,6 +19,7 @@ const DAY = 24 * HOUR;
 contract('Queue', function (accounts) {
     const TARGET = accounts[1];
     const RECIPIENT_1 = accounts[2];
+    const RECIPIENT_2 = accounts[3];
 
     let now;
     let snapshotId;
@@ -239,17 +240,31 @@ contract('Queue', function (accounts) {
         (await queue.size()).should.be.bignumber.equal(2);
     });
 
-    it('#18 get transaction', async () => {
+    it('#18 get first transaction', async () => {
         const queue = await Queue.new();
         await queue.push(RECIPIENT_1, 1000, now);
-        const tx = await queue.getTransaction(now);
+        const tx = await queue.getTransaction(0);
         tx[0].should.be.equal(RECIPIENT_1);
         tx[1].should.be.bignumber.equal(1000);
-        tx[2].should.be.bignumber.equal(now);
+        tx[2].should.not.be.bignumber.zero;
         (await queue.size()).should.be.bignumber.equal(1);
     });
 
+    it('#19 get transaction if more than two in queue', async () => {
+        const queue = await Queue.new();
+        await queue.push(RECIPIENT_1, 1000, now);
+        await queue.push(RECIPIENT_2, 1000, now + MINUTE);
+        (await queue.size()).should.be.bignumber.equal(2);
+        const tx1 = await queue.getTransaction(0);
+        const tx2 = await queue.getTransaction(1);
+        tx1[0].should.be.equal(RECIPIENT_1);
+        tx1[1].should.be.bignumber.equal(new BigNumber(1000));
+        tx2[0].should.be.equal(RECIPIENT_2);
+        tx2[1].should.be.bignumber.equal(new BigNumber(1000));
+        tx1[2].should.be.bignumber.lessThan(tx2[2]);
+    });
 
+    /***
     it('#18 try to get removed transaction', async () => {
         const queue = await Queue.new();
         await queue.push(RECIPIENT_1, 1000, now);
@@ -260,4 +275,5 @@ contract('Queue', function (accounts) {
         emptyTx[1].should.be.bignumber.zero;
         emptyTx[2].should.be.bignumber.zero;
     });
+    ***/
 });
