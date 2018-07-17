@@ -77,6 +77,29 @@ contract('DelayedPayment', function (accounts) {
         tx[2].should.not.be.bignumber.zero;
     });
 
+    it('#6 check delaying tx', async () => {
+        const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
+        await contract.sendTransaction({ value: web3.toWei(3, 'ether') });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await increaseTime(0.5 * DAY);
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await increaseTime(2 * DAY);
+        const tx1 = await contract.getTransaction(0);
+        const tx2 = await contract.getTransaction(1);
+        await contract.sendDelayedTransactions();
+
+        const newtx1 = await contract.getTransaction(0);
+        const newtx2 = await contract.getTransaction(1);
+
+        tx1[2].should.be.bignumber.lessThan(tx2[2]);
+        newtx1[0].should.be.equals(tx2[0]);
+        newtx1[1].should.be.bignumber.equals(tx2[1]);
+        newtx1[2].should.be.bignumber.equals(tx2[2]);
+        newtx2[0].should.be.equals('0x0000000000000000000000000000000000000000');
+        newtx2[1].should.be.bignumber.zero;
+        newtx2[2].should.be.bignumber.zero;
+    });
+
     it('#7 delayed tx sended', async () => {
         const contract = await DelayedPayment.new(TARGET, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
