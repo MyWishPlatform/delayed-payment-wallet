@@ -1,12 +1,11 @@
 pragma solidity ^0.4.23;
 
-import "sc-library/contracts/wallet/WalletAbiMembers.sol";
-import "sc-library/contracts/wallet/WalletAbiFunctions.sol";
+import "sc-library/contracts/wallet/Wallet.sol";
 import "sc-library/contracts/wallet/ERC20Wallet.sol";
 import "./DelayedPayment.sol";
 
 
-contract DelayedPaymentWallet is WalletAbiMembers, WalletAbiFunctions, ERC20Wallet, DelayedPayment {
+contract DelayedPaymentWallet is Wallet, ERC20Wallet, DelayedPayment {
     constructor(address _targetUser, uint _transferThresholdWei, uint _transferDelaySeconds) public
         DelayedPayment(_targetUser, _transferThresholdWei, _transferDelaySeconds) {
     }
