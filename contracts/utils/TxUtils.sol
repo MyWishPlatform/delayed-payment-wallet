@@ -14,6 +14,6 @@ library TxUtils {
     }
 
     function isNull(Transaction self) internal pure returns (bool) {
-        return equals(self, Transaction(address(0), 0, "", 0));
+        return equals(self, Transaction(address(0), 0, "", 0));  // solium-disable-line arg-overflow
     }
 }

@@ -57,12 +57,13 @@ library QueueUtils {
     }
 
     function peek(Queue storage _self) internal view returns (TxUtils.Transaction) {
+        // solium-disable-next-line arg-overflow
         return isEmpty(_self) ? TxUtils.Transaction(0, 0, "", 0) : _self.list[_self.head].data;
     }
 
     function pop(Queue storage _self) internal returns (TxUtils.Transaction) {
         if (isEmpty(_self)) {
-            return TxUtils.Transaction(0, 0, "", 0);
+            return TxUtils.Transaction(0, 0, "", 0); // solium-disable-line arg-overflow
         }
 
         if (size(_self) == 1) {

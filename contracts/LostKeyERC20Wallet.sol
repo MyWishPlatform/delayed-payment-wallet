@@ -10,7 +10,13 @@ contract LostKeyERC20Wallet is LastWill, ERC20Wallet {
 
     event Withdraw(address _sender, uint amount, address _beneficiary);
 
-    constructor(address _targetUser, address[] _recipients, uint[] _percents, uint64 _noActivityPeriod) public
+    constructor(
+        address _targetUser,
+        address[] _recipients,
+        uint[] _percents,
+        uint64 _noActivityPeriod
+    )
+        public
         LastWill(_targetUser, _recipients, _percents)
     {
         noActivityPeriod = _noActivityPeriod;
@@ -41,9 +47,18 @@ contract LostKeyERC20Wallet is LastWill, ERC20Wallet {
         address _from,
         address _to,
         uint _value
-    ) public onlyTarget returns (bool success) {
+    )
+        public
+        onlyTarget
+        returns (bool success)
+    {
         updateLastActivity();
-        return super.tokenTransferFrom(_token, _from, _to, _value);
+        return super.tokenTransferFrom(
+            _token,
+            _from,
+            _to,
+            _value
+        );
     }
 
     function tokenApprove(address _token, address _spender, uint256 _value) public onlyTarget returns (bool success) {
@@ -65,9 +80,9 @@ contract LostKeyERC20Wallet is LastWill, ERC20Wallet {
         require(address(this).balance >= _amount);
         require(_receiver != 0);
         if (_data.length == 0) {
-            require(_receiver.send(_amount));
+            require(_receiver.send(_amount)); // solium-disable-line security/no-send
         } else {
-            require(_receiver.call.value(_amount)(_data));
+            require(_receiver.call.value(_amount)(_data)); // solium-disable-line security/no-call-value
         }
 
         emit Withdraw(msg.sender, _amount, _receiver);

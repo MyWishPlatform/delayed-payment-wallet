@@ -39,13 +39,13 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
         uint _transferThresholdWei,
         uint _transferDelaySeconds
     )
-        public
-        LostKeyERC20Wallet(
-            _targetUser,
-            _recipients,
-            _percents,
-            _noActivityPeriod
-        )
+    public
+    LostKeyERC20Wallet(
+        _targetUser,
+        _recipients,
+        _percents,
+        _noActivityPeriod
+    )
     {
         transferThresholdWei = _transferThresholdWei;
         transferDelaySeconds = _transferDelaySeconds;
@@ -69,7 +69,12 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
         if (_amount < transferThresholdWei || transferThresholdWei == 0) {
             sendFundsInternal(_amount, _to, _data);
         } else {
-            queue.push(TxUtils.Transaction(_to, _amount, _data, now + transferDelaySeconds));
+            queue.push(TxUtils.Transaction(
+                    _to,
+                    _amount,
+                    _data,
+                    now + transferDelaySeconds
+                ));
         }
     }
 
@@ -97,8 +102,21 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
      * @param _value        Amount of transaction funds to be canceled.
      * @param _timestamp    Timestamp, not before that will be available to send the transaction to be canceled.
      */
-    function reject(address _to, uint _value, bytes _data, uint _timestamp) public onlyTarget {
-        TxUtils.Transaction memory transaction = TxUtils.Transaction(_to, _value, _data, _timestamp);
+    function reject(
+        address _to,
+        uint _value,
+        bytes _data,
+        uint _timestamp
+    )
+    public
+    onlyTarget
+    {
+        TxUtils.Transaction memory transaction = TxUtils.Transaction(
+            _to,
+            _value,
+            _data,
+            _timestamp
+        );
         require(queue.remove(transaction), "Transaction not found in queue");
     }
 

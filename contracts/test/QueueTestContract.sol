@@ -21,8 +21,21 @@ contract QueueTestContract {
         return (t.to, t.value, t.data, t.timestamp);
     }
 
-    function push(address _to, uint _value, bytes _data, uint _timestamp) public {
-        queue.push(TxUtils.Transaction(_to, _value, _data, _timestamp));
+    function push(
+        address _to,
+        uint _value,
+        bytes _data,
+        uint _timestamp
+    )
+        public
+    {
+        queue.push(TxUtils.Transaction(
+                _to,
+                _value,
+                _data,
+                _timestamp
+            )
+        );
     }
 
     function peek() public view returns (address, uint, bytes, uint) {
@@ -35,7 +48,21 @@ contract QueueTestContract {
         return (t.to, t.value, t.data, t.timestamp);
     }
 
-    function remove(address _to, uint _value, bytes _data, uint _timestamp) public returns (bool) {
-        return queue.remove(TxUtils.Transaction(_to, _value, _data, _timestamp));
+    function remove(
+        address _to,
+        uint _value,
+        bytes _data,
+        uint _timestamp
+    )
+        public
+        returns (bool)
+    {
+        return queue.remove(TxUtils.Transaction(
+                _to,
+                _value,
+                _data,
+                _timestamp
+            )
+        );
     }
 }
