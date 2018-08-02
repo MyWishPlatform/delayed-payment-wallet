@@ -1,10 +1,11 @@
 pragma solidity ^0.4.23;
 
-import "sc-library/contracts/SoftDestruct.sol";
+import "sc-library/contracts/wallet/Wallet.sol";
+import "./LostKeyERC20Wallet.sol";
 import "./utils/QueueUtils.sol";
 
 
-contract DelayedPayment is SoftDestruct {
+contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
     using QueueUtils for QueueUtils.Queue;
 
     // Threshold value, when sending more, the transaction will be postponed.
@@ -32,22 +33,27 @@ contract DelayedPayment is SoftDestruct {
      */
     constructor(
         address _targetUser,
+        address[] _recipients,
+        uint[] _percents,
+        uint64 _noActivityPeriod,
         uint _transferThresholdWei,
         uint _transferDelaySeconds
-    ) public SoftDestruct(_targetUser) {
+    )
+        public
+        LostKeyERC20Wallet(
+            _targetUser,
+            _recipients,
+            _percents,
+            _noActivityPeriod
+        )
+    {
         transferThresholdWei = _transferThresholdWei;
         transferDelaySeconds = _transferDelaySeconds;
     }
 
-    function() public payable {
-        addFunds();
-    }
-
-    /**
-     * Deposit to wallet contract. Available only if the contract was not killed.
-     */
-    function addFunds() public payable onlyAlive() {
-        emit FundsAdded(msg.sender, msg.value);
+    function execute(address _to, uint _value, bytes _data) external returns (bytes32) {
+        sendFunds(_to, _value, _data);
+        return keccak256(abi.encodePacked(msg.data, block.number));
     }
 
     /**
@@ -57,14 +63,18 @@ contract DelayedPayment is SoftDestruct {
      * @param _to       Recipient of funds.
      * @param _amount   Amount of funds.
      */
-    function sendFunds(address _to, uint _amount) public onlyTarget {
+    function sendFunds(address _to, uint _amount, bytes _data) public onlyTarget onlyAlive {
         require(_to != address(0), "Address should not be 0");
         require(_amount != 0, "Amount should not be 0");
         if (_amount < transferThresholdWei || transferThresholdWei == 0) {
-            internalSendTransaction(TxUtils.Transaction(_to, _amount, now));
+            sendFundsInternal(_amount, _to, _data);
         } else {
-            queue.push(TxUtils.Transaction(_to, _amount, now + transferDelaySeconds));
+            queue.push(TxUtils.Transaction(_to, _amount, _data, now + transferDelaySeconds));
         }
+    }
+
+    function sendFunds(address _to, uint _amount) public onlyTarget onlyAlive {
+        sendFunds(_to, _amount, "");
     }
 
     /**
@@ -75,9 +85,9 @@ contract DelayedPayment is SoftDestruct {
      * @return value        Amount sent to the recipient.
      * @return timestamp    Timestamp not earlier than which funds are allowed to be sent.
      */
-    function getTransaction(uint _index) public view returns (address to, uint value, uint timestamp) {
+    function getTransaction(uint _index) public view returns (address to, uint value, bytes data, uint timestamp) {
         TxUtils.Transaction memory t = queue.getTransaction(_index);
-        return (t.to, t.value, t.timestamp);
+        return (t.to, t.value, t.data, t.timestamp);
     }
 
     /**
@@ -87,8 +97,8 @@ contract DelayedPayment is SoftDestruct {
      * @param _value        Amount of transaction funds to be canceled.
      * @param _timestamp    Timestamp, not before that will be available to send the transaction to be canceled.
      */
-    function reject(address _to, uint _value, uint _timestamp) public onlyTarget {
-        TxUtils.Transaction memory transaction = TxUtils.Transaction(_to, _value, _timestamp);
+    function reject(address _to, uint _value, bytes _data, uint _timestamp) public onlyTarget {
+        TxUtils.Transaction memory transaction = TxUtils.Transaction(_to, _value, _data, _timestamp);
         require(queue.remove(transaction), "Transaction not found in queue");
     }
 
@@ -117,13 +127,9 @@ contract DelayedPayment is SoftDestruct {
     /**
      * @dev Immediate transaction sending.
      *
-     * @param transaction The transaction to be sent.
+     * @param _tx The transaction to be sent.
      */
-    function internalSendTransaction(TxUtils.Transaction transaction) internal {
-        uint balance = address(this).balance;
-        address beneficiary = transaction.to;
-        uint amount = transaction.value;
-        require(amount <= balance, "Insufficient funds");
-        beneficiary.transfer(amount);
+    function internalSendTransaction(TxUtils.Transaction _tx) internal {
+        sendFundsInternal(_tx.value, _tx.to, _tx.data);
     }
 }
