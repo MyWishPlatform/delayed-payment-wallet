@@ -16,26 +16,26 @@ contract QueueTestContract {
         return queue.isEmpty();
     }
 
-    function getTransaction(uint _index) public view returns (address, uint, uint) {
+    function getTransaction(uint _index) public view returns (address, uint, bytes, uint) {
         TxUtils.Transaction memory t = queue.getTransaction(_index);
-        return (t.to, t.value, t.timestamp);
+        return (t.to, t.value, t.data, t.timestamp);
     }
 
-    function push(address _to, uint _value, uint _timestamp) public {
-        queue.push(TxUtils.Transaction(_to, _value, _timestamp));
+    function push(address _to, uint _value, bytes _data, uint _timestamp) public {
+        queue.push(TxUtils.Transaction(_to, _value, _data, _timestamp));
     }
 
-    function peek() public view returns (address, uint, uint) {
+    function peek() public view returns (address, uint, bytes, uint) {
         TxUtils.Transaction memory t = queue.peek();
-        return (t.to, t.value, t.timestamp);
+        return (t.to, t.value, t.data, t.timestamp);
     }
 
-    function pop() public returns (address, uint, uint) {
+    function pop() public returns (address, uint, bytes, uint) {
         TxUtils.Transaction memory t = queue.pop();
-        return (t.to, t.value, t.timestamp);
+        return (t.to, t.value, t.data, t.timestamp);
     }
 
-    function remove(address _to, uint _value, uint _timestamp) public returns (bool) {
-        return queue.remove(TxUtils.Transaction(_to, _value, _timestamp));
+    function remove(address _to, uint _value, bytes _data, uint _timestamp) public returns (bool) {
+        return queue.remove(TxUtils.Transaction(_to, _value, _data, _timestamp));
     }
 }

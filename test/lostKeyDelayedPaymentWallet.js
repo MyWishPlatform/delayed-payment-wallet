@@ -20,13 +20,10 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
     const TARGET = accounts[1];
     const RECIPIENT_1 = accounts[2];
 
-    let now;
     let snapshotId;
 
     beforeEach(async () => {
         snapshotId = (await snapshot()).result;
-        const block = await web3async(web3.eth, web3.eth.getBlock, 'latest');
-        now = block.timestamp;
     });
 
     afterEach(async () => {
