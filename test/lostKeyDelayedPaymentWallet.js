@@ -51,7 +51,7 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
             TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(1, 'ether') });
         const balanceBefore = await getBalance(RECIPIENT_1);
-        await contract.sendFunds(RECIPIENT_1, web3.toWei(0.5, 'ether'), { from: TARGET });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(0.5, 'ether'), '', { from: TARGET });
         const balanceAfter = await getBalance(RECIPIENT_1);
         balanceAfter.sub(balanceBefore).should.be.bignumber.equal(web3.toWei(0.5, 'ether'));
     });
@@ -61,7 +61,7 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
             TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
         const balanceBefore = await getBalance(RECIPIENT_1);
-        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
         const balanceAfter = await getBalance(RECIPIENT_1);
         balanceAfter.should.be.bignumber.equal(balanceBefore);
         (await contract.queueSize()).should.be.bignumber.equal(1);
@@ -71,21 +71,21 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
         const contract = await LostKeyDelayedPaymentWallet.new(
             TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
-        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
         (await contract.queueSize()).should.be.bignumber.equal(1);
         const tx = await contract.getTransaction(0);
         tx[0].should.be.equals(RECIPIENT_1);
         tx[1].should.be.bignumber.equals(web3.toWei(1.5, 'ether'));
-        tx[2].should.not.be.bignumber.equal(0);
+        tx[3].should.not.be.bignumber.equal(0);
     });
 
     it('#6 check delaying tx', async () => {
         const contract = await LostKeyDelayedPaymentWallet.new(
             TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(3, 'ether') });
-        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
         await increaseTime(0.5 * DAY);
-        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
         await increaseTime(2 * DAY);
         const tx1 = await contract.getTransaction(0);
         const tx2 = await contract.getTransaction(1);
@@ -94,20 +94,20 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
         const newtx1 = await contract.getTransaction(0);
         const newtx2 = await contract.getTransaction(1);
 
-        tx1[2].should.be.bignumber.lessThan(tx2[2]);
+        tx1[3].should.be.bignumber.lessThan(tx2[3]);
         newtx1[0].should.be.equals(tx2[0]);
         newtx1[1].should.be.bignumber.equals(tx2[1]);
-        newtx1[2].should.be.bignumber.equals(tx2[2]);
+        newtx1[3].should.be.bignumber.equals(tx2[3]);
         newtx2[0].should.be.equals('0x0000000000000000000000000000000000000000');
         newtx2[1].should.be.bignumber.equal(0);
-        newtx2[2].should.be.bignumber.equal(0);
+        newtx2[3].should.be.bignumber.equal(0);
     });
 
     it('#7 delayed tx sended', async () => {
         const contract = await LostKeyDelayedPaymentWallet.new(
             TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
-        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
         (await contract.queueSize()).should.be.bignumber.equal(1);
         await increaseTime(3 * DAY);
         await contract.sendDelayedTransactions().should.be.fulfilled;
@@ -118,10 +118,10 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
         const contract = await LostKeyDelayedPaymentWallet.new(
             TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
-        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
         (await contract.queueSize()).should.be.bignumber.equal(1);
         const tx = await contract.getTransaction(0);
-        await contract.reject(tx[0], tx[1], tx[2], { from: TARGET })
+        await contract.reject(tx[0], tx[1], '', tx[3], { from: TARGET })
             .should.be.fulfilled;
     });
 
@@ -129,9 +129,9 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
         const contract = await LostKeyDelayedPaymentWallet.new(
             TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
         await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
-        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), { from: TARGET });
+        await contract.sendFunds(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
         (await contract.queueSize()).should.be.bignumber.equal(1);
         const tx = await contract.getTransaction(0);
-        await contract.reject(tx[0], tx[1], tx[2]).should.be.rejected;
+        await contract.reject(tx[0], tx[1], '', tx[3]).should.be.rejected;
     });
 });

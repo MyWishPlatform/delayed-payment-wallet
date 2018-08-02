@@ -51,8 +51,8 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
         transferDelaySeconds = _transferDelaySeconds;
     }
 
-    function execute(address _to, uint _value, bytes) external returns (bytes32) {
-        sendFunds(_to, _value);
+    function execute(address _to, uint _value, bytes _data) external returns (bytes32) {
+        sendFunds(_to, _value, _data);
         return keccak256(abi.encodePacked(msg.data, block.number));
     }
 
@@ -63,14 +63,18 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
      * @param _to       Recipient of funds.
      * @param _amount   Amount of funds.
      */
-    function sendFunds(address _to, uint _amount) public onlyTarget onlyAlive {
+    function sendFunds(address _to, uint _amount, bytes _data) public onlyTarget onlyAlive {
         require(_to != address(0), "Address should not be 0");
         require(_amount != 0, "Amount should not be 0");
         if (_amount < transferThresholdWei || transferThresholdWei == 0) {
-            internalSendTransaction(TxUtils.Transaction(_to, _amount, now));
+            sendFundsInternal(_amount, _to, _data);
         } else {
-            queue.push(TxUtils.Transaction(_to, _amount, now + transferDelaySeconds));
+            queue.push(TxUtils.Transaction(_to, _amount, _data, now + transferDelaySeconds));
         }
+    }
+
+    function sendFunds(address _to, uint _amount) public onlyTarget onlyAlive {
+        sendFunds(_to, _amount, "");
     }
 
     /**
@@ -81,9 +85,9 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
      * @return value        Amount sent to the recipient.
      * @return timestamp    Timestamp not earlier than which funds are allowed to be sent.
      */
-    function getTransaction(uint _index) public view returns (address to, uint value, uint timestamp) {
+    function getTransaction(uint _index) public view returns (address to, uint value, bytes data, uint timestamp) {
         TxUtils.Transaction memory t = queue.getTransaction(_index);
-        return (t.to, t.value, t.timestamp);
+        return (t.to, t.value, t.data, t.timestamp);
     }
 
     /**
@@ -93,8 +97,8 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
      * @param _value        Amount of transaction funds to be canceled.
      * @param _timestamp    Timestamp, not before that will be available to send the transaction to be canceled.
      */
-    function reject(address _to, uint _value, uint _timestamp) public onlyTarget {
-        TxUtils.Transaction memory transaction = TxUtils.Transaction(_to, _value, _timestamp);
+    function reject(address _to, uint _value, bytes _data, uint _timestamp) public onlyTarget {
+        TxUtils.Transaction memory transaction = TxUtils.Transaction(_to, _value, _data, _timestamp);
         require(queue.remove(transaction), "Transaction not found in queue");
     }
 
@@ -126,7 +130,6 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
      * @param _tx The transaction to be sent.
      */
     function internalSendTransaction(TxUtils.Transaction _tx) internal {
-        bytes memory empty;
-        sendFundsInternal(_tx.value, _tx.to, empty);
+        sendFundsInternal(_tx.value, _tx.to, _tx.data);
     }
 }
