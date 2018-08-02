@@ -17,11 +17,11 @@ contract LostKeyERC20Wallet is LastWill, ERC20Wallet {
         lastOwnerActivity = uint64(block.timestamp);
     }
 
-    function sendFunds(uint _amount, address _receiver, bytes _data) external onlyTarget onlyAlive {
+    function sendFunds(uint _amount, address _receiver, bytes _data) public onlyTarget onlyAlive {
         sendFundsInternal(_amount, _receiver, _data);
     }
 
-    function sendFunds(uint _amount, address _receiver) external onlyTarget onlyAlive {
+    function sendFunds(uint _amount, address _receiver) public onlyTarget onlyAlive {
         sendFundsInternal(_amount, _receiver, "");
     }
 

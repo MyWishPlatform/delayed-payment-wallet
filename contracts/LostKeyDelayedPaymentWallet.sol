@@ -1,10 +1,11 @@
 pragma solidity ^0.4.23;
 
-import "sc-library/contracts/SoftDestruct.sol";
+import "sc-library/contracts/wallet/Wallet.sol";
+import "./LostKeyERC20Wallet.sol";
 import "./utils/QueueUtils.sol";
 
 
-contract DelayedPayment is SoftDestruct {
+contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
     using QueueUtils for QueueUtils.Queue;
 
     // Threshold value, when sending more, the transaction will be postponed.
@@ -32,22 +33,27 @@ contract DelayedPayment is SoftDestruct {
      */
     constructor(
         address _targetUser,
+        address[] _recipients,
+        uint[] _percents,
+        uint64 _noActivityPeriod,
         uint _transferThresholdWei,
         uint _transferDelaySeconds
-    ) public SoftDestruct(_targetUser) {
+    )
+        public
+        LostKeyERC20Wallet(
+            _targetUser,
+            _recipients,
+            _percents,
+            _noActivityPeriod
+        )
+    {
         transferThresholdWei = _transferThresholdWei;
         transferDelaySeconds = _transferDelaySeconds;
     }
 
-    function() public payable {
-        addFunds();
-    }
-
-    /**
-     * Deposit to wallet contract. Available only if the contract was not killed.
-     */
-    function addFunds() public payable onlyAlive() {
-        emit FundsAdded(msg.sender, msg.value);
+    function execute(address _to, uint _value, bytes) external returns (bytes32) {
+        sendFunds(_to, _value);
+        return keccak256(abi.encodePacked(msg.data, block.number));
     }
 
     /**
@@ -57,7 +63,7 @@ contract DelayedPayment is SoftDestruct {
      * @param _to       Recipient of funds.
      * @param _amount   Amount of funds.
      */
-    function sendFunds(address _to, uint _amount) public onlyTarget {
+    function sendFunds(address _to, uint _amount) public onlyTarget onlyAlive {
         require(_to != address(0), "Address should not be 0");
         require(_amount != 0, "Amount should not be 0");
         if (_amount < transferThresholdWei || transferThresholdWei == 0) {
@@ -117,13 +123,10 @@ contract DelayedPayment is SoftDestruct {
     /**
      * @dev Immediate transaction sending.
      *
-     * @param transaction The transaction to be sent.
+     * @param _tx The transaction to be sent.
      */
-    function internalSendTransaction(TxUtils.Transaction transaction) internal {
-        uint balance = address(this).balance;
-        address beneficiary = transaction.to;
-        uint amount = transaction.value;
-        require(amount <= balance, "Insufficient funds");
-        beneficiary.transfer(amount);
+    function internalSendTransaction(TxUtils.Transaction _tx) internal {
+        bytes memory empty;
+        sendFundsInternal(_tx.value, _tx.to, empty);
     }
 }
