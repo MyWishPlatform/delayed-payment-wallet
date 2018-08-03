@@ -24,11 +24,11 @@ contract LostKeyERC20Wallet is LastWill, ERC20Wallet {
   }
 
   function sendFunds(uint _amount, address _receiver, bytes _data) public onlyTarget onlyAlive {
-    sendFundsInternal(_amount, _receiver, _data);
+    internalSendFunds(_receiver, _amount, _data);
   }
 
   function sendFunds(uint _amount, address _receiver) public onlyTarget onlyAlive {
-    sendFundsInternal(_amount, _receiver, "");
+    internalSendFunds(_receiver, _amount, "");
   }
 
   function check() public payable {
@@ -76,7 +76,7 @@ contract LostKeyERC20Wallet is LastWill, ERC20Wallet {
     lastOwnerActivity = uint64(block.timestamp);
   }
 
-  function sendFundsInternal(uint _amount, address _receiver, bytes _data) internal {
+  function internalSendFunds(address _receiver, uint _amount, bytes _data) internal {
     require(address(this).balance >= _amount);
     if (_data.length == 0) {
       // solium-disable-next-line security/no-send

@@ -85,7 +85,7 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
     }
 
     if (_amount < transferThresholdWei || transferThresholdWei == 0) {
-      sendFundsInternal(_amount, _to, _data);
+      internalSendFunds(_to, _amount, _data);
     } else {
       queue.push(
         TxUtils.Transaction(
@@ -165,6 +165,6 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
    * @param _tx The transaction to be sent.
    */
   function internalSendTransaction(TxUtils.Transaction _tx) internal {
-    sendFundsInternal(_tx.value, _tx.to, _tx.data);
+    internalSendFunds(_tx.to, _tx.value, _tx.data);
   }
 }
