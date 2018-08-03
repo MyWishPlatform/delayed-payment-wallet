@@ -87,12 +87,14 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
     if (_amount < transferThresholdWei || transferThresholdWei == 0) {
       sendFundsInternal(_amount, _to, _data);
     } else {
-      queue.push(TxUtils.Transaction(
+      queue.push(
+        TxUtils.Transaction(
           _to,
           _amount,
           _data,
           now + transferDelaySeconds
-        ));
+        )
+      );
     }
   }
 

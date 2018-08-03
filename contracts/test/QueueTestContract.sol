@@ -29,7 +29,8 @@ contract QueueTestContract {
   )
     public
   {
-    queue.push(TxUtils.Transaction(
+    queue.push(
+      TxUtils.Transaction(
         _to,
         _value,
         _data,
@@ -57,7 +58,8 @@ contract QueueTestContract {
     public
     returns (bool)
   {
-    return queue.remove(TxUtils.Transaction(
+    return queue.remove(
+      TxUtils.Transaction(
         _to,
         _value,
         _data,
