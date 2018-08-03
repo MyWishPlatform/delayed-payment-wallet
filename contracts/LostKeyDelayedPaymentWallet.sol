@@ -25,6 +25,11 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
 
   /**
    * @param _targetUser           Contract owner.
+   * @param _recipients           A list of users between which the funds will be divided in the case of some period of
+   *                              inactivity of the target user.
+   * @param _percents             Percentages corresponding to users. How many users will receive from the total number
+   *                              of shared funds.
+   * @param _noActivityPeriod     The period of inactivity, after which the funds will be divided between the heirs.
    * @param _transferThresholdWei Threshold value. If you try to send an amount more than which the transaction will
    *                              be added to the queue and will be sent no earlier than _transferDelaySeconds
    *                              seconds. If the value is zero, then all transactions will be sent immediately.
@@ -51,6 +56,15 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
     transferDelaySeconds = _transferDelaySeconds;
   }
 
+  /**
+   * @notice  Same as sendFunds but for wallet compatibility. Sending funds to the recipient or delaying the
+   *          transaction for a certain time. In case of a delay, the sendDelayedTransactions() function can send the
+   *          transaction after the delay time has elapsed.
+   *
+   * @param _to     Recipient of funds.
+   * @param _value  Amount of funds.
+   * @param _data   Call data.
+   */
   function execute(address _to, uint _value, bytes _data) external returns (bytes32) {
     sendFunds(_to, _value, _data);
     return keccak256(abi.encodePacked(msg.data, block.number));
@@ -60,8 +74,9 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
    * @notice  Sending funds to the recipient or delaying the transaction for a certain time. In case of a delay, the
    *          sendDelayedTransactions() function can send the transaction after the delay time has elapsed.
    *
-   * @param _to       Recipient of funds.
-   * @param _amount   Amount of funds.
+   * @param _to     Recipient of funds.
+   * @param _amount Amount of funds.
+   * @param _data   Call data.
    */
   function sendFunds(address _to, uint _amount, bytes _data) public onlyTarget onlyAlive {
     require(_to != address(0), "Address should not be 0");
@@ -76,10 +91,6 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
           now + transferDelaySeconds
         ));
     }
-  }
-
-  function sendFunds(address _to, uint _amount) public onlyTarget onlyAlive {
-    sendFunds(_to, _amount, "");
   }
 
   /**
@@ -98,9 +109,10 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
   /**
    * @notice Cancellation of a queued transaction.
    *
-   * @param _to           The recipient of the transaction funds to be canceled.
-   * @param _value        Amount of transaction funds to be canceled.
-   * @param _timestamp    Timestamp, not before that will be available to send the transaction to be canceled.
+   * @param _to         The recipient of the transaction funds to be canceled.
+   * @param _value      Amount of transaction funds to be canceled.
+   * @param _data       Call data of transaction to be canceled.
+   * @param _timestamp  Timestamp, not before that will be available to send the transaction to be canceled.
    */
   function reject(
     address _to,
