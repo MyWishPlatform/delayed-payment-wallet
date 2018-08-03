@@ -154,17 +154,16 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
         (await contract.queueSize()).should.be.bignumber.equal(1);
     });
 
-    it('#12 non payable call contract via execute method', async () => {
+    it('#12 non payable contract call via execute method', async () => {
         const mockContract = await MockContract.new();
         const contract = await LostKeyDelayedPaymentWallet.new(
             TARGET, [TARGET], [100], 3 * DAY, 0, 0);
-        await contract.sendTransaction({ value: web3.toWei(1, 'ether') });
         const callData = mockContract.contract.nonPayableExecute.getData();
         await contract.execute(mockContract.address, 0, callData, { from: TARGET });
         await mockContract.isNonPayableExecuted().should.eventually.be.true;
     });
 
-    it('#13 payable call contract via execute method', async () => {
+    it('#13 payable contract call via execute method', async () => {
         const mockContract = await MockContract.new();
         const contract = await LostKeyDelayedPaymentWallet.new(
             TARGET, [TARGET], [100], 3 * DAY, 0, 0);
@@ -172,5 +171,15 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
         const callData = mockContract.contract.payableExecute.getData();
         await contract.execute(mockContract.address, web3.toWei(0.5, 'ether'), callData, { from: TARGET });
         await mockContract.isPayableExecuted().should.eventually.be.true;
+    });
+
+    it('#14 non payable contract call with value via execute method', async () => {
+        const mockContract = await MockContract.new();
+        const contract = await LostKeyDelayedPaymentWallet.new(
+            TARGET, [TARGET], [100], 3 * DAY, 0, 0);
+        await contract.sendTransaction({ value: web3.toWei(1, 'ether') });
+        const callData = mockContract.contract.nonPayableExecute.getData();
+        await contract.execute(mockContract.address, web3.toWei(0.5, 'ether'), callData, { from: TARGET })
+            .should.eventually.be.rejected;
     });
 });
