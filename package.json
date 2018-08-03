@@ -16,8 +16,8 @@
     "lint:all:fix": "yarn run lint:fix && yarn run lint:sol:fix"
   },
   "dependencies": {
-    "last-will": "github:MyWishPlatform/last-will#0.4.3",
-    "sc-library": "github:MyWishPlatform/sc-library#0.7.0"
+    "last-will": "github:MyWishPlatform/last-will#0.4.5",
+    "sc-library": "github:MyWishPlatform/sc-library#0.7.1"
   },
   "devDependencies": {
     "chai": "^4.1.2",
