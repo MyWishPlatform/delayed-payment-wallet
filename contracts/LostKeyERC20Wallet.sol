@@ -78,7 +78,6 @@ contract LostKeyERC20Wallet is LastWill, ERC20Wallet {
 
   function sendFundsInternal(uint _amount, address _receiver, bytes _data) internal {
     require(address(this).balance >= _amount);
-    require(_receiver != 0);
     if (_data.length == 0) {
       // solium-disable-next-line security/no-send
       require(_receiver.send(_amount));

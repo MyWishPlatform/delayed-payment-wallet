@@ -80,7 +80,10 @@ contract LostKeyDelayedPaymentWallet is Wallet, LostKeyERC20Wallet {
    */
   function sendFunds(address _to, uint _amount, bytes _data) public onlyTarget onlyAlive {
     require(_to != address(0), "Address should not be 0");
-    require(_amount != 0, "Amount should not be 0");
+    if (_data.length == 0) {
+      require(_amount != 0, "Amount should not be 0");
+    }
+
     if (_amount < transferThresholdWei || transferThresholdWei == 0) {
       sendFundsInternal(_amount, _to, _data);
     } else {

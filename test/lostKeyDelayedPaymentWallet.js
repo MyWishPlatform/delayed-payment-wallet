@@ -1,6 +1,7 @@
 const BigNumber = web3.BigNumber;
 
 const LostKeyDelayedPaymentWallet = artifacts.require('./LostKeyDelayedPaymentWallet.sol');
+const MockContract = artifacts.require('./MockContract.sol');
 
 require('chai')
     .use(require('chai-bignumber')(BigNumber))
@@ -151,5 +152,25 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
         const balanceAfter = await getBalance(RECIPIENT_1);
         balanceAfter.should.be.bignumber.equal(balanceBefore);
         (await contract.queueSize()).should.be.bignumber.equal(1);
+    });
+
+    it('#12 non payable call contract via execute method', async () => {
+        const mockContract = await MockContract.new();
+        const contract = await LostKeyDelayedPaymentWallet.new(
+            TARGET, [TARGET], [100], 3 * DAY, 0, 0);
+        await contract.sendTransaction({ value: web3.toWei(1, 'ether') });
+        const callData = mockContract.contract.nonPayableExecute.getData();
+        await contract.execute(mockContract.address, 0, callData, { from: TARGET });
+        await mockContract.isNonPayableExecuted().should.eventually.be.true;
+    });
+
+    it('#13 payable call contract via execute method', async () => {
+        const mockContract = await MockContract.new();
+        const contract = await LostKeyDelayedPaymentWallet.new(
+            TARGET, [TARGET], [100], 3 * DAY, 0, 0);
+        await contract.sendTransaction({ value: web3.toWei(1, 'ether') });
+        const callData = mockContract.contract.payableExecute.getData();
+        await contract.execute(mockContract.address, web3.toWei(0.5, 'ether'), callData, { from: TARGET });
+        await mockContract.isPayableExecuted().should.eventually.be.true;
     });
 });
