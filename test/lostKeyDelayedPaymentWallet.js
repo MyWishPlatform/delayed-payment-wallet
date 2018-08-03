@@ -131,4 +131,25 @@ contract('LostKeyDelayedPaymentWallet', accounts => {
         const tx = await contract.getTransaction(0);
         await contract.reject(tx[0], tx[1], '', tx[3]).should.be.rejected;
     });
+
+    it('#10 send less than threshold with execute', async () => {
+        const contract = await LostKeyDelayedPaymentWallet.new(
+            TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
+        await contract.sendTransaction({ value: web3.toWei(1, 'ether') });
+        const balanceBefore = await getBalance(RECIPIENT_1);
+        await contract.execute(RECIPIENT_1, web3.toWei(0.5, 'ether'), '', { from: TARGET });
+        const balanceAfter = await getBalance(RECIPIENT_1);
+        balanceAfter.sub(balanceBefore).should.be.bignumber.equal(web3.toWei(0.5, 'ether'));
+    });
+
+    it('#11 send more than threshold with execute', async () => {
+        const contract = await LostKeyDelayedPaymentWallet.new(
+            TARGET, [TARGET], [100], 3 * DAY, web3.toWei(1, 'ether'), 2 * DAY);
+        await contract.sendTransaction({ value: web3.toWei(2, 'ether') });
+        const balanceBefore = await getBalance(RECIPIENT_1);
+        await contract.execute(RECIPIENT_1, web3.toWei(1.5, 'ether'), '', { from: TARGET });
+        const balanceAfter = await getBalance(RECIPIENT_1);
+        balanceAfter.should.be.bignumber.equal(balanceBefore);
+        (await contract.queueSize()).should.be.bignumber.equal(1);
+    });
 });
